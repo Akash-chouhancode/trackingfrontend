@@ -135,11 +135,7 @@ const SignIn: React.FC = () => {
               />
             </div>
 
-            <div className="flex justify-end items-center mb-5">
-              <Link to="/auth/forgot-password" className="text-sm text-primary hover:underline">
-                Forgot password?
-              </Link>
-            </div>
+           
 
             {error && (
               <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-xs text-red-600 dark:border-red-500 dark:bg-transparent">
@@ -155,14 +151,7 @@ const SignIn: React.FC = () => {
               {submitting ? 'Logging in...' : 'LOGIN'}
             </button>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Don't have an account?{' '}
-                <Link to="/auth/signup" className="text-primary hover:underline font-medium">
-                  Sign up.
-                </Link>
-              </p>
-            </div>
+           
           </form>
         </div>
       </div>

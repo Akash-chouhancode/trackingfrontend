@@ -29,11 +29,20 @@ const PublicNavbar = () => {
     <div className="flex items-center justify-between gap-8">
 
       {/* Logo */}
-      <div className="flex items-center gap-3">
-        <Link to="/home" className="flex items-center gap-2">
-          <img src={Logo} alt="Brand" className="h-20 w-auto" />
-        </Link>
-      </div>
+    <div className="flex items-center gap-3">
+  <Link to="/home" className="flex items-center gap-3">
+    <img
+      src={Logo}
+      alt="CourierTrackr Logo"
+      className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+    />
+
+    <span className="font-extrabold text-lg sm:text-xl md:text-2xl tracking-tight text-gray-900 dark:text-white">
+      couriertrackr.in
+    </span>
+  </Link>
+</div>
+
 
       {/* Desktop Menu */}
       <div className="hidden md:flex md:items-center md:gap-8">

@@ -13,7 +13,7 @@ const PublicFooter = () => {
           {/* Column 1 - Brand Info */}
           <div>
             <h2 className="mb-4 text-xl font-bold text-white">
-              Digital Courier Service
+              couriertrackr.in
             </h2>
             <p className="text-sm leading-relaxed text-[#B0B0B0]">
               Simple and reliable digital courier tracking. <br className="hidden md:block" />
@@ -51,11 +51,9 @@ const PublicFooter = () => {
               Contact Info
             </h3>
             <ul className="space-y-3 text-sm text-[#B0B0B0]">
+              
               <li>
-                <span className="mr-2">📞</span> Phone: 888-654-1243
-              </li>
-              <li>
-                <span className="mr-2">✉️</span> Email: support@digitalcourierservice.com
+                <span className="mr-2">✉️</span> Email: tbsdeliverypartner@gmail.comm
               </li>
               <li>
                 <span className="mr-2">⏰</span> Support: 24×7 Available
@@ -69,8 +67,8 @@ const PublicFooter = () => {
       {/* Bottom Bar */}
       <div className="border-t border-[#333333]">
         <div className="mx-auto max-w-screen-2xl px-4 py-6 md:px-8 2xl:px-10">
-          <p className="text-center text-sm text-[#B0B0B0] md:text-left">
-            © 2026 Digital Courier Service. All rights reserved.
+          <p className="text-center text-sm text-[#B0B0B0] md:text-center">
+            © 2026 couriertrackr.in All rights reserved.
           </p>
         </div>
       </div>

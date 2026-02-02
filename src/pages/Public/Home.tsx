@@ -1,18 +1,67 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { FaPhoneAlt, FaBox, FaShippingFast, FaClock, FaSearch } from 'react-icons/fa';
 import CoverImage from '../../images/cover/cover-01.png'; // Using existing cover image
 import Logo from '../../images/logo/logo1.png'; // Assuming logo exists here based on previous context
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Home = () => {
   const [trackingId, setTrackingId] = useState('');
+  const [trackingData, setTrackingData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleTrack = (e: React.FormEvent) => {
+  // Helper functions for date/time formatting
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  const formatTime = (timeString: string) => {
+      if (!timeString) return 'N/A';
+      // If it's a full ISO string
+      if (timeString.includes('T')) {
+        try {
+          return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return timeString; }
+      }
+      // If it's HH:MM:SS
+      const [hours, minutes] = timeString.split(':');
+      if (hours && minutes) {
+          const h = parseInt(hours, 10);
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const hour12 = h % 12 || 12;
+          return `${hour12}:${minutes} ${ampm}`;
+      }
+      return timeString;
+  };
+
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for tracking logic
-    console.log('Tracking ID:', trackingId);
-    if(trackingId.trim()) {
-        // Navigate or show modal
-        // alert(`Tracking ${trackingId}`); 
+    if (!trackingId.trim()) return;
+
+    setLoading(true);
+    setError('');
+    setTrackingData(null);
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/customer-tracking/${trackingId}`);
+      setTrackingData(response.data);
+    } catch (err: any) {
+      console.error("Tracking Error:", err);
+      if (err.response && err.response.status === 404) {
+         setError('Tracking ID not found. Please check your ID and try again.');
+      } else {
+         setError('Currently Not getting your data or try after sometime');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,18 +143,60 @@ const Home = () => {
 
                   <button
                     type="submit"
-                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-black py-4 text-base font-bold text-white transition hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                    disabled={loading}
+                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-black py-4 text-base font-bold text-white transition hover:bg-gray-800 disabled:bg-gray-400 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                   >
-                    TRACK YOUR ORDER
+                    {loading ? 'TRACKING...' : 'TRACK YOUR ORDER'}
                   </button>
                 </form>
 
+                {/* Error Message */}
+                {error && (
+                  <div className="mt-4 rounded-lg bg-red-100 p-4 text-center text-sm font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                    {error}
+                  </div>
+                )}
+
+                {/* Tracking Result */}
+                {trackingData && (
+                  <div className="mt-6 animate-fadeIn rounded-lg border border-stroke bg-gray-50 p-5 dark:border-strokedark dark:bg-meta-4">
+                    <h3 className="mb-3 text-lg font-bold text-black dark:text-white border-b border-stroke pb-2 dark:border-strokedark">
+                      Tracking Details
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                        <span className={`font-bold ${
+                          trackingData.current_status === 'Delivered' ? 'text-green-500' : 
+                          trackingData.current_status === 'Cancelled' ? 'text-red-500' : 
+                          'text-orange-500'
+                        }`}>
+                          {trackingData.current_status}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Location:</span>
+                        <span className="font-semibold text-black dark:text-white">{trackingData.location}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Date:</span>
+                        <span className="font-semibold text-black dark:text-white">{formatDate(trackingData.estimated_date)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Time:</span>
+                        <span className="font-semibold text-black dark:text-white">{formatTime(trackingData.estimated_time)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Receiver:</span>
+                        <span className="font-semibold text-black dark:text-white">{trackingData.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Support Line */}
                 <div className="mt-6 border-t border-stroke pt-4 text-center dark:border-strokedark">
-                  <div className="flex items-center justify-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
-                    <FaPhoneAlt className="text-orange-500" />
-                    <span>Call 24 Hours: <a href="tel:888-654-1243" className="hover:text-orange-500">888-654-1243</a></span>
-                  </div>
+                 
                 </div>
 
               </div>

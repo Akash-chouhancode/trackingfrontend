@@ -179,11 +179,11 @@ const Home = () => {
                         <span className="font-semibold text-black dark:text-white">{trackingData.location}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium text-gray-500 dark:text-gray-400">Date:</span>
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Estimated Date:</span>
                         <span className="font-semibold text-black dark:text-white">{formatDate(trackingData.estimated_date)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium text-gray-500 dark:text-gray-400">Time:</span>
+                        <span className="font-medium text-gray-500 dark:text-gray-400">Estimated Time To Arrival:</span>
                         <span className="font-semibold text-black dark:text-white">{formatTime(trackingData.estimated_time)}</span>
                       </div>
                       <div className="flex justify-between">

@@ -170,6 +170,8 @@ const UpdateTracking = () => {
         estimated_time: formData.estimated_time,
         status: formData.status
       };
+      
+      console.log('Sending update payload:', payload);
 
       await axios.post(
         `${API_BASE_URL}/api/status`,
@@ -190,6 +192,7 @@ const UpdateTracking = () => {
     }
   };
 
+  const newLocal = "Cancelled";
   return (
     <>
       <Breadcrumb pageName="Update Tracking Status" />
@@ -252,19 +255,23 @@ const UpdateTracking = () => {
                       <p className="text-black dark:text-white">{formatTime(item.estimated_time)}</p>
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                      <p
-                        className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
-                          item.status === 'Delivered'
-                            ? 'bg-success text-success'
-                            : item.status === 'Out for delivery'
-                            ? 'bg-warning text-warning'
-                            : item.status === 'In process'
-                            ? 'bg-primary text-primary'
-                            : 'bg-danger text-danger'
-                        }`}
-                      >
-                        {item.status}
-                      </p>
+                     <p
+  className={`inline-flex rounded-full bg-opacity-10 py-1 px-3 text-sm font-medium ${
+    item.status === 'Delivered'
+      ? 'bg-success text-success'
+      : item.status === 'Out for delivery'
+      ? 'bg-warning text-warning'
+      : item.status === 'In process'
+      ? 'bg-primary text-primary'
+      : item.status === 'Cancelled'
+      ? 'bg-danger text-danger'
+      : item.status === 'Booking'
+      ? 'bg-info text-info'
+      : 'bg-gray-100 text-gray-600'
+  }`}
+>
+  {item.status}
+</p>
                     </td>
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <div className="flex items-center space-x-3.5">
@@ -336,9 +343,10 @@ const UpdateTracking = () => {
                     className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-5 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
                   >
                     <option value="Booking">Booking</option>
-                    <option value="In process">In process</option>
-                    <option value="Out for delivery">Out for delivery</option>
+                    <option value="In process">In Process</option>
+                    <option value="Out for delivery">Out for Delivery</option>
                     <option value="Delivered">Delivered</option>
+                    <option value={newLocal}>Cancelled</option>
                   </select>
                   <span className="absolute top-1/2 right-4 z-30 -translate-y-1/2">
                     <svg

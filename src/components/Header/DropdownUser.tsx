@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ClickOutside from '../ClickOutside';
-import userSix from '../../images/cover/Gwal .png';
-
+import { FaAngleDoubleDown } from "react-icons/fa";
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -37,9 +36,12 @@ const DropdownUser = () => {
           <span className="block text-xs">{user?.email ?? ''}</span>
         </span>
 
+        <span className="block lg:hidden h-10 w-10 rounded-full overflow-hidden">
+          <FaAngleDoubleDown className="h-10 w-4 object-cover" />
+        </span>
 
         <svg
-          className="hidden fill-current sm:block"
+          className="hidden lg:block fill-current"
           width="12"
           height="8"
           viewBox="0 0 12 8"

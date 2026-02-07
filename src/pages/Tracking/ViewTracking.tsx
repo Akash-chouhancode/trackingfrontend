@@ -5,6 +5,7 @@ import axios from 'axios';
 import { FaCopy, FaSearch} from 'react-icons/fa';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const ITEMS_PER_PAGE = 15;
 
 interface TrackingData {
   id: string | number;
@@ -20,6 +21,7 @@ const ViewTracking = () => {
   const [filteredData, setFilteredData] = useState<TrackingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchTrackingData();
@@ -28,6 +30,20 @@ const ViewTracking = () => {
   useEffect(() => {
     filterData();
   }, [searchTerm, trackingData]);
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage(prev => prev - 1);
+  };
 
   const fetchTrackingData = async () => {
     setLoading(true);
@@ -62,6 +78,7 @@ const ViewTracking = () => {
   const filterData = () => {
     if (!searchTerm.trim()) {
       setFilteredData(trackingData);
+      setCurrentPage(1);
       return;
     }
 
@@ -73,6 +90,7 @@ const ViewTracking = () => {
       item.phone?.toLowerCase().includes(lowerTerm)
     );
     setFilteredData(filtered);
+    setCurrentPage(1);
   };
 
   const copyToClipboard = (text: string) => {
@@ -133,14 +151,14 @@ const ViewTracking = () => {
                     <span className="ml-2 font-medium">Loading records...</span>
                   </td>
                 </tr>
-              ) : filteredData.length === 0 ? (
+              ) : currentItems.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-8 text-center text-gray-500 dark:text-gray-400">
                     No tracking records found.
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item, key) => (
+                currentItems.map((item, key) => (
                   <tr key={key} className="border-b border-stroke dark:border-strokedark">
                     <td className="py-5 px-4 pl-9 xl:pl-11">
                       <div className="flex items-center gap-2">
@@ -174,6 +192,29 @@ const ViewTracking = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4 border-t border-stroke pt-4 dark:border-strokedark">
+           <div className="text-sm text-gray-600 dark:text-gray-400">
+             Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredData.length)} of {filteredData.length} entries
+           </div>
+           <div className="flex space-x-2">
+             <button
+               onClick={prevPage}
+               disabled={currentPage === 1}
+               className={`px-4 py-2 rounded ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-opacity-90'}`}
+             >
+               Previous
+             </button>
+             <button
+               onClick={nextPage}
+               disabled={currentPage === totalPages}
+               className={`px-4 py-2 rounded ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-opacity-90'}`}
+             >
+               Next
+             </button>
+           </div>
         </div>
       </div>
     </>

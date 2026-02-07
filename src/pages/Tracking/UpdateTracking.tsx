@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { FaEdit, FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { FaEdit, FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaClock, FaTrash, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
 import flatpickr from 'flatpickr';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const ITEMS_PER_PAGE = 15;
 
 interface TrackingData {
   id: number | string;
@@ -19,10 +20,20 @@ interface TrackingData {
 
 const UpdateTracking = () => {
   const [trackingList, setTrackingList] = useState<TrackingData[]>([]);
+  const [filteredList, setFilteredList] = useState<TrackingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTracking, setSelectedTracking] = useState<TrackingData | null>(null);
   const [updating, setUpdating] = useState(false);
+  
+  // Search & Pagination State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Delete State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [trackingToDelete, setTrackingToDelete] = useState<TrackingData | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const datePickerRef = useRef<HTMLInputElement>(null);
   const timePickerRef = useRef<HTMLInputElement>(null);
@@ -57,6 +68,34 @@ const UpdateTracking = () => {
   useEffect(() => {
     fetchTrackingData();
   }, []);
+
+  useEffect(() => {
+    // Filter logic
+    let result = trackingList;
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      result = result.filter(item => 
+        (item.email && item.email.toLowerCase().includes(lowerTerm)) ||
+        (item.tracking_id && item.tracking_id.toLowerCase().includes(lowerTerm))
+      );
+    }
+    setFilteredList(result);
+    setCurrentPage(1); // Reset to first page on search
+  }, [searchTerm, trackingList]);
+
+  // Pagination Logic
+  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+  const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage(prev => prev - 1);
+  };
 
   useEffect(() => {
     if (isModalOpen) {
@@ -192,12 +231,62 @@ const UpdateTracking = () => {
     }
   };
 
+  // Delete Handlers
+  const openDeleteModal = (tracking: TrackingData) => {
+    setTrackingToDelete(tracking);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setTrackingToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!trackingToDelete) return;
+    
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`${API_BASE_URL}/api/tracking/${trackingToDelete.id}`, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      });
+      
+      toast.success('Tracking record and related updates deleted successfully');
+      closeDeleteModal();
+      fetchTrackingData();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete tracking record');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const newLocal = "Cancelled";
+  const newLocal1 = "Returned";
   return (
     <>
       <Breadcrumb pageName="Update Tracking Status" />
 
       <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
+        
+        {/* Search Bar */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="relative w-full max-w-md">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <FaSearch className="text-gray-500" />
+            </div>
+            <input
+              type="text"
+              className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-sm text-gray-900 focus:border-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-primary dark:focus:ring-primary"
+              placeholder="Search by Email or Tracking ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
         <div className="max-w-full overflow-x-auto">
           <table className="w-full table-auto">
             <thead>
@@ -230,12 +319,12 @@ const UpdateTracking = () => {
                 <tr>
                   <td colSpan={7} className="py-5 text-center">Loading...</td>
                 </tr>
-              ) : trackingList.length === 0 ? (
+              ) : currentItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-5 text-center">No tracking records found</td>
                 </tr>
               ) : (
-                trackingList.map((item, key) => (
+                currentItems.map((item, key) => (
                   <tr key={key}>
                     <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
                       <h5 className="font-medium text-black dark:text-white">
@@ -267,7 +356,10 @@ const UpdateTracking = () => {
       ? 'bg-danger text-danger'
       : item.status === 'Booking'
       ? 'bg-info text-info'
+      : item.status === 'Returned'
+      ? 'bg-success text-success'
       : 'bg-gray-100 text-gray-600'
+      
   }`}
 >
   {item.status}
@@ -282,6 +374,13 @@ const UpdateTracking = () => {
                         >
                           <FaEdit size={18} />
                         </button>
+                        <button
+                          onClick={() => openDeleteModal(item)}
+                          className="hover:text-danger"
+                          title="Delete Tracking"
+                        >
+                          <FaTrash size={18} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -290,7 +389,65 @@ const UpdateTracking = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4 pb-4">
+           <div className="text-sm text-gray-600 dark:text-gray-400">
+             Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredList.length)} of {filteredList.length} entries
+           </div>
+           <div className="flex space-x-2">
+             <button
+               onClick={prevPage}
+               disabled={currentPage === 1}
+               className={`px-4 py-2 rounded ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-opacity-90'}`}
+             >
+               Previous
+             </button>
+             <button
+               onClick={nextPage}
+               disabled={currentPage === totalPages}
+               className={`px-4 py-2 rounded ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-primary text-white hover:bg-opacity-90'}`}
+             >
+               Next
+             </button>
+           </div>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed left-0 top-0 z-999999 flex h-full w-full items-center justify-center bg-black/90 px-4 py-5">
+          <div className="w-full max-w-142.5 rounded-lg bg-white py-4 px-4 text-center dark:bg-boxdark md:py-8 md:px-17.5">
+             <div className="flex flex-col items-center">
+               <div className="bg-red-100 p-4 rounded-full mb-4">
+                 <FaExclamationTriangle className="text-red-500 text-4xl" />
+               </div>
+               <h3 className="pb-2 text-xl font-bold text-black dark:text-white sm:text-2xl">
+                 Confirm Deletion
+               </h3>
+               <p className="mb-6 text-gray-600 dark:text-gray-400">
+                 Are you sure you want to delete tracking ID <strong>{trackingToDelete?.tracking_id}</strong>? This action cannot be undone.
+               </p>
+               
+               <div className="flex w-full justify-center gap-4">
+                 <button
+                   onClick={closeDeleteModal}
+                   className="w-1/3 rounded border border-stroke bg-gray p-3 font-medium text-black transition hover:bg-meta-1 hover:text-white dark:border-strokedark dark:bg-meta-4 dark:text-white dark:hover:bg-meta-1"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={handleDelete}
+                   disabled={deleting}
+                   className="w-1/3 rounded border border-danger bg-danger p-3 font-medium text-white transition hover:bg-opacity-90 disabled:opacity-70"
+                 >
+                   {deleting ? 'Deleting...' : 'Delete'}
+                 </button>
+               </div>
+             </div>
+          </div>
+        </div>
+      )}
 
       {/* Update Status Modal */}
       {isModalOpen && (
@@ -347,6 +504,7 @@ const UpdateTracking = () => {
                     <option value="Out for delivery">Out for Delivery</option>
                     <option value="Delivered">Delivered</option>
                     <option value={newLocal}>Cancelled</option>
+                    <option value={newLocal1}>Returned</option>
                   </select>
                   <span className="absolute top-1/2 right-4 z-30 -translate-y-1/2">
                     <svg
